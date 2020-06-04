@@ -62,8 +62,8 @@ class SimpleReCaptcha extends Module implements WidgetInterface
 
     /** @var array modules compatible */
     protected $compatible_modules = array(
+        'ps_emailsubscription', // v2.3.0
         'contactform',
-        'ps_emailsubscription',
     );
 
     /**
@@ -119,6 +119,9 @@ class SimpleReCaptcha extends Module implements WidgetInterface
             && (bool) Configuration::updateValue(static::CONF_FORMS_CONFIG, serialize($default_form_config_values));
     }
 
+    /**
+     * @return bool
+     */
     public function installTab()
     {
         $tab = new Tab();
@@ -172,26 +175,28 @@ class SimpleReCaptcha extends Module implements WidgetInterface
 
     public function renderWidget($hookName = null, array $configuration = [])
     {
+        $id_module = (int)$configuration['id_module'];
+        
         $modules = $this->getAvailableModuleForms();
-
         $values = $this->getConfigFieldsValues();
-        $tpl_vars = array();
 
-        $id_module = $configuration['id_module'];
+        if ( array_key_exists($id_module, $modules) ) {
+            $tpl_vars['name'] = $modules[$id_module];
+            $tpl_vars['widget_type'] = $values[$modules[$id_module].'[widget_type]'];
+            $tpl_vars['RECAPTCHA_API_KEY'] = $values['RECAPTCHA_API_KEY_' . $tpl_vars['widget_type']];
+            $tpl_vars['country'] = strtolower(Country::getIsoById($values[$modules[$id_module].'[country]']));
+            $tpl_vars['size'] = $values[$modules[$id_module].'[size]'];
+            $tpl_vars['theme'] = $values[$modules[$id_module].'[theme]'];
+        }
 
         switch ($hookName) {
             case null:
+            case 'actionFormSubmitBefore':
                 return;
                 break;
+            case 'displayRecaptcha':
             case 'displayGDPRConsent':
-                if (array_key_exists($id_module, $modules) && $tpl_vars['RECAPTCHA_ENABLE'] = $values['RECAPTCHA_ENABLE_' . strtoupper($modules[$id_module])]) {
-                    $tpl_vars['name'] = $modules[$id_module];
-                    $tpl_vars['widget_type'] = $values[$modules[$id_module].'[widget_type]'];
-                    $tpl_vars['RECAPTCHA_API_KEY'] = $values['RECAPTCHA_API_KEY_' . $tpl_vars['widget_type']];
-                    $tpl_vars['country'] = strtolower(Country::getIsoById($values[$modules[$id_module].'[country]']));
-                    $tpl_vars['size'] = $values[$modules[$id_module].'[size]'];
-                    $tpl_vars['theme'] = $values[$modules[$id_module].'[theme]'];
-                } else {
+                if ( !isset($tpl_vars) || !$values['RECAPTCHA_ENABLE_' . strtoupper($modules[$id_module])]) {
                     return;
                 }
             default:
@@ -203,7 +208,19 @@ class SimpleReCaptcha extends Module implements WidgetInterface
 
     public function getWidgetVariables($hookName = null, array $configuration = [])
     {
-        return true;
+        return $this->validateReCaptcha();
+    }
+
+    /**
+     * Get content of module admin configuration page
+     * @deprecated No longer use this ! Please use a ModuleAdminController for Configuration use with HelperOption, 
+     * for ObjectModel use with HelperForm
+     * @return string
+     */
+    public function getContent() {
+        Tools::redirectAdmin(Context::getContext()->link->getAdminLink(self::MODULE_ADMIN_CONTROLLER));
+        // Recommended to redirect user to your ModuleAdminController who manage Configuration
+        return null;
     }
 
     /**
@@ -241,17 +258,10 @@ class SimpleReCaptcha extends Module implements WidgetInterface
 
         return $available_modules;
     }
-
-    /**
-     * Get content of module admin configuration page
-     * @deprecated No longer use this ! Please use a ModuleAdminController for Configuration use with HelperOption, 
-     * for ObjectModel use with HelperForm
-     * @return string
-     */
-    public function getContent() {
-        Tools::redirectAdmin(Context::getContext()->link->getAdminLink(self::MODULE_ADMIN_CONTROLLER));
-        // Recommended to redirect user to your ModuleAdminController who manage Configuration
-        return null;
+    
+    public function validateReCaptcha()
+    {
+        return true;
     }
 
 }
