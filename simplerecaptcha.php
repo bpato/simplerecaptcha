@@ -75,7 +75,14 @@ class SimpleReCaptcha extends Module implements WidgetInterface
 
         $this->displayName = $this->trans('PS Simple Google ReCaptcha', array(), 'Modules.Simplerecaptcha.Admin');
         $this->description = $this->trans('Add Google ReCaptcha to your Prestashop', array(), 'Modules.Simplerecaptcha.Admin');
-        $this->confirmUninstall = $this->trans('Are you sure you want to uninstall?', array(), 'Modules.Simplerecaptcha.Admin');        
+        $this->confirmUninstall = $this->trans('Are you sure you want to uninstall?', array(), 'Modules.Simplerecaptcha.Admin');
+
+        /**
+         * TODO warnings
+         * if (!Configuration::get('MYMODULE_NAME')) {
+         *  $this->warning = $this->l('No name provided');
+         * }
+         */
     }
 
     /**
@@ -85,6 +92,7 @@ class SimpleReCaptcha extends Module implements WidgetInterface
     {
         return parent::install() 
             && $this->registerHook($this->hooks)
+            && $this->installTab()
             && $this->installConfiguration();
     }
 
@@ -111,12 +119,29 @@ class SimpleReCaptcha extends Module implements WidgetInterface
             && (bool) Configuration::updateValue(static::CONF_FORMS_CONFIG, serialize($default_form_config_values));
     }
 
+    public function installTab()
+    {
+        $tab = new Tab();
+        
+        $tab->class_name = static::MODULE_ADMIN_CONTROLLER;
+        $tab->name = array_fill_keys(
+            Language::getIDs(false),
+            $this->displayName
+        );
+        $tab->active = false;
+        $tab->id_parent = (int) Tab::getIdFromClassName('AdminModulesManage');
+        $tab->module = $this->name;
+
+        return $tab->add();
+    }
+
     /**
      * @return bool
      */
     public function uninstall()
     {
         return parent::uninstall()
+            && $this->uninstallTabs()
             && $this->uninstallConfiguration();
     }
 
@@ -127,6 +152,22 @@ class SimpleReCaptcha extends Module implements WidgetInterface
     {
         return (bool) Configuration::deleteByName(static::CONF_API_KEYS)
             && (bool) Configuration::deleteByName(static::CONF_FORMS_CONFIG);
+    }
+
+    /**
+     * @return bool
+     */
+    public function uninstallTabs()
+    {
+        $id_tab = (int) Tab::getIdFromClassName(static::MODULE_ADMIN_CONTROLLER);
+
+        if ($id_tab) {
+            $tab = new Tab($id_tab);
+
+            return (bool) $tab->delete();
+        }
+
+        return true;
     }
 
     public function renderWidget($hookName = null, array $configuration = [])

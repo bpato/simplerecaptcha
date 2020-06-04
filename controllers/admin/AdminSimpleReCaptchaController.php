@@ -38,9 +38,7 @@ class AdminSimpleReCaptchaController extends ModuleAdminController
         /** @var SimpleReCaptcha $module */
         $this->module = Module::getInstanceByName('simplerecaptcha');
 
-        if (!$this->module->active) {
-            Tools::redirectAdmin($this->context->link->getAdminLink('AdminDashboard'));
-        }
+        $this->meta_title = $this->module->displayName;
 
         $defaultLang = (int)Configuration::get('PS_LANG_DEFAULT');
 
@@ -213,6 +211,14 @@ class AdminSimpleReCaptchaController extends ModuleAdminController
                 'name'  => 'submitSimpleRecaptchaConfig'
             )
         );
+    }
+
+    /**
+     * Set default toolbar title.
+     */
+    public function initToolbarTitle()
+    {
+        $this->toolbar_title[] = $this->module->displayName;
     }
 
     /**
