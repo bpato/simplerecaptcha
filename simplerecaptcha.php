@@ -171,10 +171,18 @@ class SimpleReCaptcha extends Module implements WidgetInterface
 
     public function getConfigFieldsValues()
     {
-        $api_keys = unserialize(Configuration::get('RECAPTCHA_API_KEYS'));
-        $config = unserialize(Configuration::get('RECAPTCHA_CONFIG'));
+        $api_keys = unserialize(Configuration::get(static::CONF_API_KEYS));
+        $config = unserialize(Configuration::get(static::CONF_FORMS_CONFIG));
 
-        return array_merge($config, $api_keys);
+        if (is_array($api_keys) === false) {
+            $api_keys = array();
+        }
+
+        if (is_array($config) === false) {
+            $config = array();
+        }
+
+        return array_merge($api_keys, $config);
     }
 
     public function getAvailableModuleForms()
@@ -183,7 +191,8 @@ class SimpleReCaptcha extends Module implements WidgetInterface
         $available_modules = array();
 
         foreach($this->compatible_modules as $name) {
-            if ($module = Module::getInstanceByName($name)) {
+            $module = Module::getInstanceByName($name);
+            if ($module->active) {
                 $available_modules[$module->name] = $module->displayName;
             }
         }
