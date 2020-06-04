@@ -34,7 +34,7 @@ class SimpleReCaptcha extends Module implements WidgetInterface
     public $tab = 'back_office_features';
 
     /** @var string Version */
-    public $version = '1.0.0';
+    public $version = '1.0.2';
 
     /** @var string author of the module */
     public $author = 'Brais Pato';
@@ -94,13 +94,12 @@ class SimpleReCaptcha extends Module implements WidgetInterface
      */
     public function installConfiguration()
     {
-        
         for($i = 0; $i <= 1; $i++) {
             $default_api_keys_values['RECAPTCHA_API_KEY_'.$i] = '';
             $default_api_keys_values['RECAPTCHA_SECRET_API_KEY_'.$i] = '';
         }
 
-        foreach ($this->getAvailableModuleForms() as $name => $displayName) {
+        foreach ($this->getAvailableModuleForms() as $name) {
             $default_form_config_values['RECAPTCHA_ENABLE_' . strtoupper($name)] = 0;
             $default_form_config_values[$name.'[widget_type]'] = 0;
             $default_form_config_values[$name.'[country]'] = (int) Configuration::get('PS_COUNTRY_DEFAULT');
@@ -132,10 +131,7 @@ class SimpleReCaptcha extends Module implements WidgetInterface
 
     public function renderWidget($hookName = null, array $configuration = [])
     {
-        $modules = array();
-        foreach ($this->getAvailableModuleForms() as $name => $displayName) {
-            $modules[Module::getModuleIdByName($name)] = $name;
-        }
+        $modules = $this->getAvailableModuleForms();
 
         $values = $this->getConfigFieldsValues();
         $tpl_vars = array();
@@ -149,11 +145,11 @@ class SimpleReCaptcha extends Module implements WidgetInterface
             case 'displayGDPRConsent':
                 if (array_key_exists($id_module, $modules) && $tpl_vars['RECAPTCHA_ENABLE'] = $values['RECAPTCHA_ENABLE_' . strtoupper($modules[$id_module])]) {
                     $tpl_vars['name'] = $modules[$id_module];
-                    $tpl_vars['widget_type'] = $values[$modules[$id_module].'[\'widget_type\']'];
+                    $tpl_vars['widget_type'] = $values[$modules[$id_module].'[widget_type]'];
                     $tpl_vars['RECAPTCHA_API_KEY'] = $values['RECAPTCHA_API_KEY_' . $tpl_vars['widget_type']];
-                    $tpl_vars['country'] = strtolower(Country::getIsoById($values[$modules[$id_module].'[\'country\']']));
-                    $tpl_vars['size'] = $values[$modules[$id_module].'[\'size\']'];
-                    $tpl_vars['theme'] = $values[$modules[$id_module].'[\'theme\']'];
+                    $tpl_vars['country'] = strtolower(Country::getIsoById($values[$modules[$id_module].'[country]']));
+                    $tpl_vars['size'] = $values[$modules[$id_module].'[size]'];
+                    $tpl_vars['theme'] = $values[$modules[$id_module].'[theme]'];
                 } else {
                     return;
                 }
@@ -169,6 +165,9 @@ class SimpleReCaptcha extends Module implements WidgetInterface
         return true;
     }
 
+    /**
+     * @return array
+     */
     public function getConfigFieldsValues()
     {
         $api_keys = unserialize(Configuration::get(static::CONF_API_KEYS));
@@ -185,15 +184,17 @@ class SimpleReCaptcha extends Module implements WidgetInterface
         return array_merge($api_keys, $config);
     }
 
+    /**
+     * @return array
+     */
     public function getAvailableModuleForms()
     {
-
         $available_modules = array();
 
         foreach($this->compatible_modules as $name) {
             $module = Module::getInstanceByName($name);
             if ($module->active) {
-                $available_modules[$module->name] = $module->displayName;
+                $available_modules[$module->id] = $module->name;
             }
         }
 

@@ -127,7 +127,11 @@ class AdminSimpleReCaptchaController extends ModuleAdminController
 
         $select_array = Cache::retrieve($cache_id);
 
-        $include_forms = $this->module->getAvailableModuleForms();
+        $include_forms = array();
+        
+        foreach( $this->module->getAvailableModuleForms() as $name) {
+            $include_forms[$name] = Module::getModuleName($name);
+        }
 
         $input_config_fields = array();
 
@@ -298,7 +302,7 @@ class AdminSimpleReCaptchaController extends ModuleAdminController
     {
         $values = array();
 
-        foreach ($this->module->getAvailableModuleForms() as $name => $displayName) {
+        foreach ($this->module->getAvailableModuleForms() as $name) {
             $values['RECAPTCHA_ENABLE_' . strtoupper($name)] = (int)Tools::getValue('RECAPTCHA_ENABLE_' . strtoupper($name));
             $submit_values = Tools::getValue($name);
             
