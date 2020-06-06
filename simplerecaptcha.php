@@ -225,7 +225,6 @@ class SimpleReCaptcha extends Module implements WidgetInterface
 
     public function renderWidget($hookName = null, array $configuration = [])
     {
-        // id_module needed for display hooks
         if (isset($configuration['id_module'])) {
             // Retrieves the data for this module
             $id_module = (int)$configuration['id_module'];
@@ -256,7 +255,7 @@ class SimpleReCaptcha extends Module implements WidgetInterface
                     return;
                 }
             default:
-                $this->context->smarty->assign('simplerecaptcha', array( $id_module => $tpl_vars ));
+                $this->context->smarty->assign('simplerecaptcha', $tpl_vars);
                 return $this->fetch('module:simplerecaptcha/views/templates/hook/simplerecaptcha.tpl');
                 break;
         }
@@ -266,6 +265,7 @@ class SimpleReCaptcha extends Module implements WidgetInterface
     {
 
         if (!isset($configuration['secret'])) {
+            Context::getContext()->controller->errors[] = $this->trans('Undefined secret key', array(), 'Modules.Simplerecaptcha.Admin');
             return false;
         }
 
