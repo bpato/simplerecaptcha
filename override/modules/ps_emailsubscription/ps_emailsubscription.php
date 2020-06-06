@@ -34,31 +34,14 @@ use PrestaShop\PrestaShop\Core\Module\WidgetInterface;
 
 class Ps_EmailsubscriptionOverride extends Ps_Emailsubscription implements WidgetInterface
 {
-    public function getWidgetVariables($hookName = null, array $configuration = [])
+    public function newsletterRegistration()
     {
-        $variables = [];
-
-        $variables['value'] = Tools::getValue('email', '');
-        $variables['msg'] = '';
-        $variables['conditions'] = Configuration::get('NW_CONDITIONS', $this->context->language->id);
-
-        if (Tools::isSubmit('submitNewsletter')) {
-            Hook::coreRenderWidget(Module::getInstanceByName('simplerecaptcha'), 'actionFormSubmitBefore', $configuration);
-            if ( !sizeof($this->context->controller->errors)) {
-                $this->newsletterRegistration();
-                if ($this->error) {
-                    $variables['msg'] = $this->error;
-                    $variables['nw_error'] = true;
-                } elseif ($this->valid) {
-                    $variables['msg'] = $this->valid;
-                    $variables['nw_error'] = false;
-                }
-            } else {
-                $variables['msg'] = $this->context->controller->errors[0];
-                $variables['nw_error'] = true;
-            }
+        Hook::coreRenderWidget(Module::getInstanceByName('simplerecaptcha'), 'actionFormSubmitBefore', array('id_module' => $this->id));
+        if ( !sizeof($this->context->controller->errors)) {
+            parent::newsletterRegistration();
+        } else {
+            $this->error = $this->context->controller->errors[0];
         }
-        return $variables;
     }
 
 }
