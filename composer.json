@@ -1,0 +1,31 @@
+{
+    "type": "prestashop-module",
+    "name": "bpato/simplerecaptcha",
+    "description": "A sample module to add Google ReCaptcha to your Prestashop",
+    "homepage": "https://github.com/bpato/simplerecaptcha",
+    "license": "AFL-3.0",
+    "authors": [
+        {
+            "name": "Brais Pato",
+            "email": "contact@prestashop.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.6",
+        "google/recaptcha": "^1.2"
+    },
+    "config": {
+        "platform": {
+            "php": "5.6.0"
+        },
+        "preferred-install": "dist",
+        "optimize-autoloader": true,
+        "prepend-autoloader": false
+    },
+    "autoload": {
+        "classmap": [
+            "controllers",
+            "simplerecaptcha.php"
+        ]
+    }
+}

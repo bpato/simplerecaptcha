@@ -22,6 +22,12 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
+/*
+ * Run 'composer install' if the 'vendor' folder doesn't exist
+ */
+require_once( __DIR__  . '/vendor/autoload.php');
+
+use ReCaptcha\ReCaptcha;
 use PrestaShop\PrestaShop\Core\Module\WidgetInterface;
 
 class SimpleReCaptcha extends Module implements WidgetInterface
@@ -57,6 +63,8 @@ class SimpleReCaptcha extends Module implements WidgetInterface
 
     /** @var array Hooks used */
     public $hooks = array(
+        'actionFrontControllerSetMedia',
+        'displayBeforeBodyClosingTag',
         'displayGDPRConsent',
     );
 
@@ -129,7 +137,7 @@ class SimpleReCaptcha extends Module implements WidgetInterface
         $tab->class_name = static::MODULE_ADMIN_CONTROLLER;
         $tab->name = array_fill_keys(
             Language::getIDs(false),
-            $this->displayName
+            $this->name
         );
         $tab->active = false;
         $tab->id_parent = (int) Tab::getIdFromClassName('AdminModulesManage');
@@ -173,26 +181,74 @@ class SimpleReCaptcha extends Module implements WidgetInterface
         return true;
     }
 
-    public function renderWidget($hookName = null, array $configuration = [])
+    public function hookActionFrontControllerSetMedia($params)
     {
-        $id_module = (int)$configuration['id_module'];
-        
+
         $modules = $this->getAvailableModuleForms();
         $values = $this->getConfigFieldsValues();
 
-        if ( array_key_exists($id_module, $modules) ) {
-            $tpl_vars['name'] = $modules[$id_module];
-            $tpl_vars['widget_type'] = $values[$modules[$id_module].'[widget_type]'];
-            $tpl_vars['RECAPTCHA_API_KEY'] = $values['RECAPTCHA_API_KEY_' . $tpl_vars['widget_type']];
-            $tpl_vars['country'] = strtolower(Country::getIsoById($values[$modules[$id_module].'[country]']));
-            $tpl_vars['size'] = $values[$modules[$id_module].'[size]'];
-            $tpl_vars['theme'] = $values[$modules[$id_module].'[theme]'];
+        $load = false;
+        foreach ($modules as $name) {
+            if ($load) {
+                continue;
+            }
+
+            if ($values['RECAPTCHA_ENABLE_' . strtoupper($name)]) {
+                $load = true;
+                $this->context->controller->registerJavascript(
+                    'g-recaptcha', // Unique ID
+                    'https://www.google.com/recaptcha/api.js', // JS path
+                    array(
+                        'server' => 'remote', 
+                        'position' => 'bottom', 
+                        'priority' => 1000
+                    ) // Arguments
+                );
+            }
+        }
+    }
+
+    public function hookDisplayBeforeBodyClosingTag($params) {
+        $modules = $this->getAvailableModuleForms();
+        $values = $this->getConfigFieldsValues();
+
+        $tpl_vars = array();
+        foreach ($modules as $name) {
+            if ($values['RECAPTCHA_ENABLE_' . strtoupper($name)] && $values[$name.'[widget_type]'] == 1) {
+                $tpl_vars[] = $name;
+            }
+        }
+
+        $this->context->smarty->assign('simplerecaptcha_js', $tpl_vars );
+        return $this->fetch('module:simplerecaptcha/views/templates/hook/displayBeforeBodyClosingTag.tpl');
+    }
+
+    public function renderWidget($hookName = null, array $configuration = [])
+    {
+        // id_module needed for display hooks
+        if (isset($configuration['id_module'])) {
+            // Retrieves the data for this module
+            $id_module = (int)$configuration['id_module'];
+            
+            $modules = $this->getAvailableModuleForms();
+            $values = $this->getConfigFieldsValues();
+
+            if ( array_key_exists($id_module, $modules) ) {
+                $tpl_vars['name'] = $modules[$id_module];
+                $tpl_vars['widget_type'] = $values[$modules[$id_module].'[widget_type]'];
+                $tpl_vars['country'] = strtolower(Country::getIsoById($values[$modules[$id_module].'[country]']));
+                $tpl_vars['size'] = $values[$modules[$id_module].'[size]'];
+                $tpl_vars['theme'] = $values[$modules[$id_module].'[theme]'];
+
+                $tpl_vars['RECAPTCHA_API_KEY'] = $values['RECAPTCHA_API_KEY_' . $tpl_vars['widget_type']];
+                $configuration['secret'] = $values['RECAPTCHA_SECRET_API_KEY_' . $tpl_vars['widget_type']];
+            }
         }
 
         switch ($hookName) {
             case null:
             case 'actionFormSubmitBefore':
-                return;
+                return $this->getWidgetVariables($hookName, $configuration);
                 break;
             case 'displayRecaptcha':
             case 'displayGDPRConsent':
@@ -208,7 +264,30 @@ class SimpleReCaptcha extends Module implements WidgetInterface
 
     public function getWidgetVariables($hookName = null, array $configuration = [])
     {
-        return $this->validateReCaptcha();
+
+        if (!isset($configuration['secret'])) {
+            return false;
+        }
+
+        $secret = $configuration['secret'];
+        $gRecaptchaResponse = Tools::getValue('g-recaptcha-response');
+        $remoteIp = Tools::getRemoteAddr();
+        
+        /** @var ReCaptcha $recaptcha */
+        $recaptcha = new ReCaptcha($secret);
+
+        $resp = $recaptcha->setExpectedHostname(Configuration::get('PS_SHOP_DOMAIN'))
+                          ->verify($gRecaptchaResponse, $remoteIp);
+
+        if ($resp->isSuccess()) {
+            return true;
+        } else {
+            $errors = $resp->getErrorCodes();
+            Context::getContext()->controller->errors[] = $this->trans('Incorrect captcha, %s. Please try again.', $errors, 'Modules.Simplerecaptcha.Admin');
+            
+            return false;
+        }
+
     }
 
     /**
@@ -250,18 +329,13 @@ class SimpleReCaptcha extends Module implements WidgetInterface
         $available_modules = array();
 
         foreach($this->compatible_modules as $name) {
-            $module = Module::getInstanceByName($name);
-            if ($module->active) {
+            if (Module::isEnabled($name)) {
+                $module = Module::getInstanceByName($name);
                 $available_modules[$module->id] = $module->name;
             }
         }
 
         return $available_modules;
-    }
-    
-    public function validateReCaptcha()
-    {
-        return true;
     }
 
 }

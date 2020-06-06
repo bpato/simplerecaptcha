@@ -43,9 +43,7 @@ class Ps_EmailsubscriptionOverride extends Ps_Emailsubscription implements Widge
         $variables['conditions'] = Configuration::get('NW_CONDITIONS', $this->context->language->id);
 
         if (Tools::isSubmit('submitNewsletter')) {
-
             Hook::coreRenderWidget(Module::getInstanceByName('simplerecaptcha'), 'actionFormSubmitBefore', $configuration);
-
             if ( !sizeof($this->context->controller->errors)) {
                 $this->newsletterRegistration();
                 if ($this->error) {
