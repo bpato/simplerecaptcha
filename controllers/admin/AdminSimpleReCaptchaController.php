@@ -86,16 +86,6 @@ class AdminSimpleReCaptchaController extends ModuleAdminController
             )
         );
 
-        if (_PS_MODE_DEV_) {
-            $this->fields_options[0]['fields'][$this->module::CONF_API_KEYS] = array(
-                'type' => 'textarea',
-                'cols' => 10,
-                'rows' => 5,
-                'title' => $this->module::CONF_API_KEYS,
-                'desc' => '<i class="material-icons">bug_report</i>'.$this->trans('Your shop is in debug mode.', array(), 'Admin.Navigation.Notification')
-            );
-        }
-
         $cache_id = 'AdminSimpleReCaptchaController_selects_' . pSQL($defaultLang);
         
         if (!Cache::isStored($cache_id)) {
@@ -132,16 +122,6 @@ class AdminSimpleReCaptchaController extends ModuleAdminController
         }
 
         $input_config_fields = array();
-
-        if (_PS_MODE_DEV_) {
-            $input_config_fields[$this->module::CONF_FORMS_CONFIG] = array(
-                'type' => 'textarea',
-                'cols' => 10,
-                'rows' => 5,
-                'title' => $this->module::CONF_FORMS_CONFIG,
-                'desc' => '<i class="material-icons">bug_report</i>'.$this->trans('Your shop is in debug mode.', array(), 'Admin.Navigation.Notification')
-            );
-        }
 
         foreach ($include_forms as $name => $displayName) {
             $new_field = array(
@@ -211,6 +191,24 @@ class AdminSimpleReCaptchaController extends ModuleAdminController
                 'name'  => 'submitSimpleRecaptchaConfig'
             )
         );
+
+        if (_PS_MODE_DEV_) {
+            $this->fields_options[0]['fields'][$this->module::CONF_API_KEYS] = array(
+                'type' => 'textarea',
+                'cols' => 10,
+                'rows' => 5,
+                'title' => $this->module::CONF_API_KEYS,
+                'desc' => '<i class="material-icons">bug_report</i>'.$this->trans('Your shop is in debug mode.', array(), 'Admin.Navigation.Notification')
+            );
+            
+            $this->fields_options[1]['fields'][$this->module::CONF_FORMS_CONFIG] = array(
+                'type' => 'textarea',
+                'cols' => 10,
+                'rows' => 5,
+                'title' => $this->module::CONF_FORMS_CONFIG,
+                'desc' => '<i class="material-icons">bug_report</i>'.$this->trans('Your shop is in debug mode.', array(), 'Admin.Navigation.Notification')
+            );
+        }
     }
 
     /**
