@@ -36,21 +36,47 @@ class AdminSimpleReCaptchaController extends ModuleAdminController
         parent::__construct();
 
         /** @var SimpleReCaptcha $module */
-        $this->module = Module::getInstanceByName('simplerecaptcha');
+        //$this->module = Module::getInstanceByName('simplerecaptcha');
 
         $this->meta_title = $this->module->displayName;
 
         $defaultLang = (int)Configuration::get('PS_LANG_DEFAULT');
+
+        $cache_id = 'AdminSimpleReCaptchaController_select_lang_' . pSQL($defaultLang);
+
+        if (!Cache::isStored($cache_id)) {
+            $select_lang = array();
+
+            $countries = Country::getCountries($defaultLang);
+            foreach ($countries as $country) {
+                $select_lang[] = array(
+                    'id' => $country['id_country'],
+                    'name' => $country['name'] . ' (' . $country['iso_code'] . ')',
+                );
+            }
+
+            Cache::store($cache_id, $select_lang);
+        }
+
+        $select_lang = Cache::retrieve($cache_id);
 
         $this->fields_options = array();
         $this->fields_options[0] = array(
             'title' => $this->trans('reCAPTCHA API key pair', array(), 'Modules.Simplerecaptcha.Admin'),
             'icon' => 'icon-cogs',
             'tabs' => array(
-                'visible' => $this->trans('reCAPTCHA v2 - I am not a robot', array(), 'Modules.Simplerecaptcha.Admin'),
+                'visible' => $this->trans('reCAPTCHA v2 - Checkbox', array(), 'Modules.Simplerecaptcha.Admin'),
                 'invisible' => $this->trans('reCAPTCHA v2 - Invisible', array(), 'Modules.Simplerecaptcha.Admin'),
             ),
             'fields' => array(
+                'RECAPTCHA_COUNTRY' => array(
+                    'type' => 'select',
+                    'title' => $this->trans('Language code', array(), 'Modules.Simplerecaptcha.Admin'),
+                    'auto_value' => false,
+                    'defaultValue' => Configuration::get('PS_COUNTRY_DEFAULT'),
+                    'identifier' => 'id',
+                    'list' => $select_lang,
+                ),
                 'RECAPTCHA_API_KEY_0' => array(
                     'type' => 'text',
                     'title' => $this->trans('Google API Key', array(), 'Modules.Simplerecaptcha.Admin'),
@@ -85,40 +111,29 @@ class AdminSimpleReCaptchaController extends ModuleAdminController
                 'name'  => 'submitRecaptchaKeys'
             )
         );
-
-        $cache_id = 'AdminSimpleReCaptchaController_selects_' . pSQL($defaultLang);
         
-        if (!Cache::isStored($cache_id)) {
-            $select_array = array(
-                'country' => array(),
-                'size' => array(
-                    array('id' => 'normal', 'name' => $this->trans('Normal', array(), 'Modules.Simplerecaptcha.Admin')),
-                    array('id' => 'compact', 'name' => $this->trans('Compact', array(), 'Modules.Simplerecaptcha.Admin')),
-                ),
-                'theme' => array(
-                    array('id' => 'light', 'name' => $this->trans('Light', array(), 'Modules.Simplerecaptcha.Admin')),
-                    array('id' => 'dark', 'name' => $this->trans('Dark', array(), 'Modules.Simplerecaptcha.Admin')),
-                )
-            );
-        
-        
-            $countries = Country::getCountries($defaultLang);
-            foreach ($countries as $country) {
-                $select_array['country'][] = array(
-                    'id' => $country['id_country'],
-                    'name' => $country['name'] . ' (' . $country['iso_code'] . ')',
-                );
-            }
-
-            Cache::store($cache_id, $select_array);
-        }
-
-        $select_array = Cache::retrieve($cache_id);
+        $select_array = array(
+            'size' => array(
+                array('id' => 'normal', 'name' => $this->trans('Normal', array(), 'Modules.Simplerecaptcha.Admin')),
+                array('id' => 'compact', 'name' => $this->trans('Compact', array(), 'Modules.Simplerecaptcha.Admin')),
+            ),
+            'theme' => array(
+                array('id' => 'light', 'name' => $this->trans('Light', array(), 'Modules.Simplerecaptcha.Admin')),
+                array('id' => 'dark', 'name' => $this->trans('Dark', array(), 'Modules.Simplerecaptcha.Admin')),
+            )
+        );
 
         $include_forms = array();
         
-        foreach( $this->module->getAvailableModuleForms() as $name) {
-            $include_forms[$name] = Module::getModuleName($name);
+        foreach( $this->module->getAvailableInstances() as $key => $name) {
+            if (is_int($key)) {
+                // Integer Module id 
+                $include_forms[$name] = Module::getModuleName($name);
+            } else {
+                // String Controller filename
+                $include_forms[$name] = $key;
+            }
+            
         }
 
         $input_config_fields = array();
@@ -140,22 +155,13 @@ class AdminSimpleReCaptchaController extends ModuleAdminController
                     'list' => array(
                         array(
                             'id' => 0,
-                            'name' => $this->trans('I am not a robot box', array(), 'Modules.Simplerecaptcha.Admin'),
+                            'name' => $this->trans('Checkbox', array(), 'Modules.Simplerecaptcha.Admin'),
                         ),
                         array(
                             'id' => 1,
                             'name' => $this->trans('Invisible', array(), 'Modules.Simplerecaptcha.Admin'),
                         ),
                     ),
-                    'tab'   => $name
-                ),
-                $name.'[country]' => array(
-                    'type' => 'select',
-                    'title' => $this->trans('Language code', array(), 'Modules.Simplerecaptcha.Admin'),
-                    'auto_value' => false,
-                    'defaultValue' => Configuration::get('PS_COUNTRY_DEFAULT'),
-                    'identifier' => 'id',
-                    'list' => $select_array['country'],
                     'tab'   => $name
                 ),
                 $name.'[size]' => array(
@@ -193,6 +199,7 @@ class AdminSimpleReCaptchaController extends ModuleAdminController
         );
 
         if (_PS_MODE_DEV_) {
+            // Debug stored variables on ps_configuration
             $this->fields_options[0]['fields'][$this->module::CONF_API_KEYS] = array(
                 'type' => 'textarea',
                 'cols' => 10,
@@ -265,7 +272,7 @@ class AdminSimpleReCaptchaController extends ModuleAdminController
      */
     public function getSubmitRecaptchaKeys()
     {
-        $values = array();
+        $values = array('RECAPTCHA_COUNTRY' => strval(Tools::getValue('RECAPTCHA_COUNTRY')));
     
         for($i = 0; $i <= 1; $i++) {
             $values['RECAPTCHA_API_KEY_'.$i] = strval(Tools::getValue('RECAPTCHA_API_KEY_'.$i));
@@ -306,8 +313,8 @@ class AdminSimpleReCaptchaController extends ModuleAdminController
     {
         $values = array();
 
-        foreach ($this->module->getAvailableModuleForms() as $name) {
-            $values['RECAPTCHA_ENABLE_' . strtoupper($name)] = (int)Tools::getValue('RECAPTCHA_ENABLE_' . strtoupper($name));
+        foreach ($this->module->getAvailableInstances() as $name) {
+            $values['RECAPTCHA_ENABLE_' . strtoupper($name)] = Tools::getValue('RECAPTCHA_ENABLE_' . strtoupper($name));
             $submit_values = Tools::getValue($name);
             
             foreach ($submit_values as $key => $value) {
@@ -457,7 +464,7 @@ class AdminSimpleReCaptchaController extends ModuleAdminController
                 }
 
                 foreach ($category_data['fields'] as $key => &$field) {
-                    if (isset($field['auto_value']) && ! $field['auto_value']) {
+                    if (isset($field['auto_value']) && false === $field['auto_value']) {
                         $field['value'] = $value_options[$key];
                     }
                 }

@@ -36,11 +36,11 @@ class Ps_EmailsubscriptionOverride extends Ps_Emailsubscription implements Widge
 {
     public function newsletterRegistration()
     {
-        Hook::coreRenderWidget(Module::getInstanceByName('simplerecaptcha'), 'actionFormSubmitBefore', array('id_module' => $this->id));
-        if ( !sizeof($this->context->controller->errors)) {
+        Hook::coreRenderWidget(Module::getInstanceByName('simplerecaptcha'), 'actionFormRecaptchaSubmitBefore', array('id_module' => $this->id));
+        if ( !sizeof(Context::getContext()->controller->errors)) {
             parent::newsletterRegistration();
         } else {
-            $this->error = $this->context->controller->errors[0];
+            $this->error = Context::getContext()->controller->errors[0];
         }
     }
 

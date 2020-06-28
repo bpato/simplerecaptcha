@@ -1,6 +1,7 @@
 <div class="form-group row">
+    <label class="col-md-3 form-control-label required"></label>
     <div class="col-md-6">
-        <div id='recaptcha' class="g-recaptcha {$simplerecaptcha.name}" 
+        <div id="recaptcha" class="g-recaptcha {$simplerecaptcha.name}" 
             data-sitekey="{$simplerecaptcha.RECAPTCHA_API_KEY|escape:'html'}"
         {if $simplerecaptcha.widget_type eq 0}
             data-theme="{$simplerecaptcha.theme}"

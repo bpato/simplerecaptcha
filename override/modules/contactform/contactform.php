@@ -36,8 +36,8 @@ class ContactformOverride extends Contactform implements WidgetInterface
 {
     public function sendMessage()
     {
-        Hook::coreRenderWidget(Module::getInstanceByName('simplerecaptcha'), 'actionFormSubmitBefore', array('id_module' => $this->id));
-        if ( !sizeof($this->context->controller->errors)) {
+        Hook::coreRenderWidget(Module::getInstanceByName('simplerecaptcha'), 'actionFormRecaptchaSubmitBefore', array('id_module' => $this->id));
+        if ( !sizeof(Context::getContext()->controller->errors)) {
             parent::sendMessage();
         }
     }
