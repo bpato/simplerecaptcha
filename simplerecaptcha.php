@@ -1,21 +1,27 @@
 <?php
 /**
- * 2007-2020 PrestaShop and Contributors
+ * Copyright (C) 2020 Brais Pato
  *
  * NOTICE OF LICENSE
  *
- * This source file is subject to the Academic Free License 3.0 (AFL-3.0)
- * that is bundled with this package in the file LICENSE.txt.
- * It is also available through the world-wide-web at this URL:
- * https://opensource.org/licenses/AFL-3.0
- * If you did not receive a copy of the license and are unable to
- * obtain it through the world-wide-web, please send an email
- * to license@prestashop.com so we can send you a copy immediately.
+ * This file is part of Simplerecaptcha <https://github.com/bpato/simplerecaptcha.git>.
+ * 
+ * Simplerecaptcha is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * @author    Brais Pato <contact@prestashop.com>
- * @copyright 2007-2020 PrestaShop SA and Contributors
- * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License 3.0 (AFL-3.0)
- * International Registered Trademark & Property of PrestaShop SA
+ * Simplerecaptcha is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Foobar. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * @author    Brais Pato <patodevelop@gmail.com>
+ * @copyright 2020 Brais Pato
+ * @license   https://www.gnu.org/licenses/ GNU GPLv3
  */
 
 if (!defined('_PS_VERSION_')) {
@@ -27,7 +33,6 @@ if (!defined('_PS_VERSION_')) {
  */
 require_once( __DIR__  . '/vendor/autoload.php');
 
-use PhpParser\Node\Stmt\Break_;
 use ReCaptcha\ReCaptcha;
 use PrestaShop\PrestaShop\Core\Module\WidgetInterface;
 
