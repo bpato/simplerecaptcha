@@ -41,7 +41,7 @@ class SimpleReCaptcha extends Module implements WidgetInterface
     public $tab = 'back_office_features';
 
     /** @var string Version */
-    public $version = '1.0.2';
+    public $version = '1.0.3';
 
     /** @var string author of the module */
     public $author = 'Brais Pato';
@@ -51,7 +51,7 @@ class SimpleReCaptcha extends Module implements WidgetInterface
 
     /** @var array filled with known compliant PS versions */
     public $ps_versions_compliancy = array(
-        'min' => '1.7.6.0',
+        'min' => '1.7.3.3',
         'max' => '1.7.9.99'
     );
 
@@ -74,7 +74,7 @@ class SimpleReCaptcha extends Module implements WidgetInterface
     /** @var array compatible modules and controllers */
     protected $instances = array(
         'modules' => array(
-            'ps_emailsubscription', // v2.3.0
+            'ps_emailsubscription', // v2.6.0
             'contactform',
         ),
         'controllers' => array(
@@ -93,13 +93,6 @@ class SimpleReCaptcha extends Module implements WidgetInterface
         $this->displayName = $this->trans('PS Simple Google ReCaptcha', array(), 'Modules.Simplerecaptcha.Admin');
         $this->description = $this->trans('Add Google ReCaptcha to your Prestashop', array(), 'Modules.Simplerecaptcha.Admin');
         $this->confirmUninstall = $this->trans('Are you sure you want to uninstall?', array(), 'Modules.Simplerecaptcha.Admin');
-
-        /**
-         * TODO warnings
-         * if (!Configuration::get('MYMODULE_NAME')) {
-         *  $this->warning = $this->l('No name provided');
-         * }
-         */
     }
 
     /**
@@ -198,7 +191,7 @@ class SimpleReCaptcha extends Module implements WidgetInterface
 
         $load = false;
         foreach ($instances as $name) {
-            if ($load === false && $values['RECAPTCHA_ENABLE_' . strtoupper($name)]) {
+            if ($load === false && isset($values['RECAPTCHA_ENABLE_' . strtoupper($name)]) && $values['RECAPTCHA_ENABLE_' . strtoupper($name)]) {
                 $load = true;
                 $this->context->controller->registerJavascript(
                     'g-recaptcha', // Unique ID
@@ -211,7 +204,7 @@ class SimpleReCaptcha extends Module implements WidgetInterface
                 );
             }
 
-            if ($this->context->controller instanceof $name && $values['RECAPTCHA_ENABLE_' . strtoupper($name)]) {
+            if ($this->context->controller instanceof $name && isset($values['RECAPTCHA_ENABLE_' . strtoupper($name)]) && $values['RECAPTCHA_ENABLE_' . strtoupper($name)]) {
 
                 $filename = '/modules/' . $this->name . '/views/js/simplerecaptcha-' . strtolower($name) . '.js';
 
@@ -236,7 +229,7 @@ class SimpleReCaptcha extends Module implements WidgetInterface
 
         $instances_vars = array();
         foreach ($instances as $name) {
-            if ($values['RECAPTCHA_ENABLE_' . strtoupper($name)] && $values[$name.'[widget_type]'] == 1) {
+            if ( isset($values['RECAPTCHA_ENABLE_' . strtoupper($name)]) && $values['RECAPTCHA_ENABLE_' . strtoupper($name)] && $values[$name.'[widget_type]'] == 1) {
                 $instances_vars[] = $name;
             }
         }
@@ -256,7 +249,7 @@ class SimpleReCaptcha extends Module implements WidgetInterface
                 break;
             }
             
-            if ($values['RECAPTCHA_ENABLE_' . strtoupper($index)]) {
+            if (isset($values['RECAPTCHA_ENABLE_' . strtoupper($name)]) && $values['RECAPTCHA_ENABLE_' . strtoupper($index)]) {
                 $tpl_vars['name'] = $index;
                 $tpl_vars['widget_type'] = $values[$index.'[widget_type]'];
                 $tpl_vars['size'] = $values[$index.'[size]'];
@@ -284,32 +277,31 @@ class SimpleReCaptcha extends Module implements WidgetInterface
 
         if ( array_key_exists($index, $instances) ) {
             $instance = $instances[$index];
+            if (isset($values['RECAPTCHA_ENABLE_' . strtoupper($instance)]) && $values['RECAPTCHA_ENABLE_' . strtoupper($instance)]) {
+                $tpl_vars['name'] = $instance;
+                $tpl_vars['widget_type'] = $values[$instance.'[widget_type]'];
+                $tpl_vars['size'] = $values[$instance.'[size]'];
+                $tpl_vars['theme'] = $values[$instance.'[theme]'];
+                $tpl_vars['RECAPTCHA_API_KEY'] = $values['RECAPTCHA_API_KEY_' . $tpl_vars['widget_type']];
 
-            $tpl_vars['name'] = $instance;
-            $tpl_vars['widget_type'] = $values[$instance.'[widget_type]'];
-            $tpl_vars['size'] = $values[$instance.'[size]'];
-            $tpl_vars['theme'] = $values[$instance.'[theme]'];
-            $tpl_vars['RECAPTCHA_API_KEY'] = $values['RECAPTCHA_API_KEY_' . $tpl_vars['widget_type']];
-
-            switch ($hookName) {
-                case null:
-                case 'actionFormRecaptchaSubmitBefore':
-                case 'actionSubmitAccountBefore':
-                    if ( $values['RECAPTCHA_ENABLE_' . strtoupper($instance)] ) {
+                switch ($hookName) {
+                    case null:
+                    case 'actionFormRecaptchaSubmitBefore':
+                    case 'actionSubmitAccountBefore':
                         // Get api secret key
                         $configuration['secret'] = $values['RECAPTCHA_SECRET_API_KEY_' . $tpl_vars['widget_type']];
                         return $this->getWidgetVariables($hookName, $configuration);
-                    }
-                    break;
-                case 'displayRecaptcha':
-                case 'displayGDPRConsent':
-                    if ( !isset($tpl_vars) || !$values['RECAPTCHA_ENABLE_' . strtoupper($instance)]) {
-                        return;
-                    }
-                default:
-                    $this->context->smarty->assign('simplerecaptcha', $tpl_vars);
-                    return $this->fetch('module:simplerecaptcha/views/templates/hook/simplerecaptcha.tpl');
-                    break;
+                        break;
+                    case 'displayRecaptcha':
+                    case 'displayGDPRConsent':
+                        if ( !isset($tpl_vars) ) {
+                            return;
+                        }
+                    default:
+                        $this->context->smarty->assign('simplerecaptcha', $tpl_vars);
+                        return $this->fetch('module:simplerecaptcha/views/templates/hook/simplerecaptcha.tpl');
+                        break;
+                }
             }
         }
     }

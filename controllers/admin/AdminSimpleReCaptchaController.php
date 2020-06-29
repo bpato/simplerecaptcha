@@ -465,7 +465,7 @@ class AdminSimpleReCaptchaController extends ModuleAdminController
 
                 foreach ($category_data['fields'] as $key => &$field) {
                     if (isset($field['auto_value']) && false === $field['auto_value']) {
-                        $field['value'] = $value_options[$key];
+                        $field['value'] = isset($value_options[$key])?$value_options[$key]:'';
                     }
                 }
             }

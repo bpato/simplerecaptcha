@@ -30,15 +30,15 @@ if (!defined('_PS_VERSION_')) {
 
 use PrestaShop\PrestaShop\Core\Module\WidgetInterface;
 
-/** ps_emailsubscription v2.3.0 */
+/** ps_emailsubscription v2.6.0 */
 
 class Ps_EmailsubscriptionOverride extends Ps_Emailsubscription implements WidgetInterface
 {
-    public function newsletterRegistration()
+    public function newsletterRegistration($hookName = NULL)
     {
         Hook::coreRenderWidget(Module::getInstanceByName('simplerecaptcha'), 'actionFormRecaptchaSubmitBefore', array('id_module' => $this->id));
         if ( !sizeof(Context::getContext()->controller->errors)) {
-            parent::newsletterRegistration();
+            parent::newsletterRegistration($hookName);
         } else {
             $this->error = Context::getContext()->controller->errors[0];
         }
