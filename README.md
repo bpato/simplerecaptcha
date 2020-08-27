@@ -4,7 +4,6 @@
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![GitHub release](https://img.shields.io/github/release/bpato/simplerecaptcha.svg)](https://GitHub.com/bpato/simplerecaptcha/releases/)
-[![Github all releases](https://img.shields.io/github/downloads/bpato/simplerecaptcha/total.svg)](https://GitHub.com/bpato/simplerecaptcha/releases/)
 
 ![simplerecaptcha](https://github.com/bpato/simplerecaptcha/blob/master/logo.png?raw=true)
 
