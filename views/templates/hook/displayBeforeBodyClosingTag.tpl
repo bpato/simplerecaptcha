@@ -14,7 +14,7 @@
             var recaptcha_colection = $('div#recaptcha').sort(sortByExplicitRender);
             $('div#recaptcha.{$instance}').closest('form').submit(function(event){
                 if (! grecaptcha.getResponse(recaptcha_colection.index($('.{$instance}'))) ) {
-                    window._{$instance}Submitter = (event.originalEvent !== undefined) ? event.originalEvent.submitter : event;
+                    window._{$instance}Submitter = (event.originalEvent !== undefined) ? event.originalEvent.submitter : event.target;
                     event.preventDefault();
                     grecaptcha.reset(recaptcha_colection.index($('.{$instance}')));
                     grecaptcha.execute(recaptcha_colection.index($('.{$instance}')));
