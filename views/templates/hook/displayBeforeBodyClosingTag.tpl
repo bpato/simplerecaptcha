@@ -1,3 +1,4 @@
+{nocache}
 <!-- begin: recaptcha invisible -->
 <script type="text/javascript">
     function sortByExplicitRender(a, b){
@@ -67,3 +68,4 @@
 </script>
 <!--end explicit render: {$simplerecaptcha.name} -->
 {/if}
+{/nocache}
