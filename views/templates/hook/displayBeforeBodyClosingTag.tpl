@@ -1,3 +1,4 @@
+{nocache}
 <!-- begin: recaptcha invisible -->
 <script type="text/javascript">
     function sortByExplicitRender(a, b){
@@ -14,7 +15,7 @@
             var recaptcha_colection = $('div#recaptcha').sort(sortByExplicitRender);
             $('div#recaptcha.{$instance}').closest('form').submit(function(event){
                 if (! grecaptcha.getResponse(recaptcha_colection.index($('.{$instance}'))) ) {
-                    window._{$instance}Submitter = event.originalEvent.submitter;
+                    window._{$instance}Submitter = (event.originalEvent !== undefined) ? event.originalEvent.submitter : event.target;
                     event.preventDefault();
                     grecaptcha.reset(recaptcha_colection.index($('.{$instance}')));
                     grecaptcha.execute(recaptcha_colection.index($('.{$instance}')));
@@ -66,4 +67,13 @@
     })(jQuery);
 </script>
 <!--end explicit render: {$simplerecaptcha.name} -->
+{else}
+<script type="text/javascript">
+    (function($) {
+        window.onloadRender = function() {
+            console.info('ReCaptcha loaded.');
+        };
+    })(jQuery);
+</script>
 {/if}
+{/nocache}

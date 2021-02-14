@@ -46,7 +46,7 @@ class SimpleReCaptcha extends Module implements WidgetInterface
     public $tab = 'back_office_features';
 
     /** @var string Version */
-    public $version = '1.0.3';
+    public $version = '1.0.4';
 
     /** @var string author of the module */
     public $author = 'Brais Pato';
