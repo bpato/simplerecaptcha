@@ -67,5 +67,13 @@
     })(jQuery);
 </script>
 <!--end explicit render: {$simplerecaptcha.name} -->
+{else}
+<script type="text/javascript">
+    (function($) {
+        window.onloadRender = function() {
+            console.info('ReCaptcha loaded.');
+        };
+    })(jQuery);
+</script>
 {/if}
 {/nocache}
